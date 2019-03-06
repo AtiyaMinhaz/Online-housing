@@ -1,0 +1,19 @@
+.container-flex {
+  display: flex;
+  flex-direction: row;
+}
+
+.container-filter {
+  margin: 1%;
+  width: 55vh;
+}
+
+.container-about {
+  margin: 5% 25% 0 25%;
+  text-align: center;
+}
+
+#map {
+  height: 90vh;
+  width: 80%;
+}
