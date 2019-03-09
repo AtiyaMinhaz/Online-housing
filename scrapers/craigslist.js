@@ -95,10 +95,11 @@ const ContentPage = {
         axios
           .get(link)
           .then(res => {
-            let data = this.parseDetails(res.data, link);
-            if (data !== null) {
+            try {
+              let data = this.parseDetails(res.data, link);
               resolve(data);
-            } else {
+            } catch (e) {
+              console.log('skipping ' + link);
               resolve();
             }
           })
@@ -109,40 +110,46 @@ const ContentPage = {
     });
   },
   parseDetails(html, link) {
-    try {
-      $ = cheerio.load(html);
-      $ = cheerio.load($('.page-container .body').html());
+    $ = cheerio.load(html);
+    $ = cheerio.load($('.page-container .body').html());
 
-      let raw_price = $('.postingtitle .price')
-        .html()
-        .substr(1);
-      let raw_bedrooms = $('.mapAndAttrs .shared-line-bubble:first-child b:nth-child(1)')
-        .html()
-        .charAt(0);
-      let raw_bathrooms = $('.mapAndAttrs .shared-line-bubble:first-child b:nth-child(2)')
-        .html()
-        .charAt(0);
-      if (isNaN(raw_price) || isNaN(raw_bedrooms) || isNaN(raw_bathrooms)) throw 'type error';
+    let raw_title = $('#titletextonly').html();
+    let raw_posting_date = $('#display-date time').attr('datetime');
+    let raw_lat = $('#map').attr('data-latitude');
+    let raw_lon = $('#map').attr('data-longitude');
+    let raw_price = $('.postingtitle .price')
+      .html()
+      .substr(1);
+    let raw_bedrooms = $('.mapAndAttrs .shared-line-bubble:first-child b:nth-child(1)')
+      .html()
+      .charAt(0);
+    let raw_bathrooms = $('.mapAndAttrs .shared-line-bubble:first-child b:nth-child(2)')
+      .html()
+      .charAt(0);
 
-      let price = parseInt(raw_price);
-      let bedrooms = parseInt(raw_bedrooms);
-      let bathrooms = parseInt(raw_bathrooms);
-      let posting_date = new Date($('#display-date time').attr('datetime'));
-      let title = $('#titletextonly').html();
-      let lat = $('#map').attr('data-latitude');
-      let lon = $('#map').attr('data-longitude');
-      let type = 'rental';
-      let source = 'craigslist';
-      let post_id = `cr${
+    if (!raw_title || !raw_posting_date || !raw_lat || !raw_lon || !raw_price || !raw_bedrooms || !raw_bathrooms) {
+      throw 'missing required field';
+    } else if (isNaN(raw_price) || isNaN(raw_bedrooms) || isNaN(raw_bathrooms)) {
+      throw 'type error';
+    }
+
+    return {
+      title: raw_title,
+      type: 'rental',
+      lat: raw_lat,
+      lon: raw_lon,
+      price: parseInt(raw_price),
+      bedrooms: parseInt(raw_bedrooms),
+      bathrooms: parseInt(raw_bathrooms),
+      posting_date: new Date(raw_posting_date),
+      source: 'craigslist',
+      link,
+      post_id: `cr${
         link
           .split('/')
           .reverse()[0]
           .split('.')[0]
-      }`;
-
-      return { title, type, lat, lon, price, bedrooms, bathrooms, posting_date, source, link, post_id };
-    } catch (e) {
-      return null;
-    }
+      }`
+    };
   }
 };
