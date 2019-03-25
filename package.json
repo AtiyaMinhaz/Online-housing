@@ -16,6 +16,7 @@
     "mongoose": "^5.4.15"
   },
   "devDependencies": {
+    "dotenv": "^7.0.0",
     "nodemon": "^1.17.5"
   }
 }
